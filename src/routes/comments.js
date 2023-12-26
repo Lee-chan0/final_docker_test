@@ -124,4 +124,15 @@ router.delete(
   }
 );
 
+router.get('/every', async(req, res, next) => {
+  try{
+    const vi = await prisma.users.findMany({where : {userId : 28}});
+
+    return res.status(201).json({data : "vi"});
+  }catch(err){
+    console.error(err);
+    return res.status(500).json({message : "servererror"})
+  }
+})
+
 export default router;
