@@ -16,6 +16,7 @@ services:
 
   blue:
     build: .
+    restart: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
@@ -29,6 +30,7 @@ services:
 
   green:
     build: .
+    restart : always
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
