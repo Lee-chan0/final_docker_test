@@ -271,15 +271,17 @@ router.post('/token', async(req, res, next) => {
 });
 
 // 내 정보 수정 API
-router.patch('/myInfo/editmyInfo', authMiddleware ,imageUpload.single('image'), async(req, res, next) => {
+router.patch('/myInfo/editmyInfo',imageUpload.single('image'), async(req, res, next) => {
   try{
-    const {userId} = req.user;
+    // const {userId} = req.user;
     const {username} = req.body;
+    console.log(username);
+    console.log(req.file);
 
     const imageUrl = req.file.location
 
     const editmyInfo = await prisma.users.update({
-      where : {userId : +userId},
+      where : {userId : 1},
       data : {
         username : username,
         profileImg : imageUrl
