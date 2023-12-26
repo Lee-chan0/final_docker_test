@@ -57,7 +57,7 @@ app.use('/', [
 ]);
 
 app.get("/", (req, res) => {
-  res.send("...2313555553.555...11111111111");
+  res.send("ohohohohohoh");
 });
 
 // 헬스 체크 엔드포인트 추가

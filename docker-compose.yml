@@ -17,6 +17,11 @@ services:
   blue:
     build: .
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://astrania.shop/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
@@ -33,6 +38,11 @@ services:
   green:
     build: .
     restart : always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://astrania.shop/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
