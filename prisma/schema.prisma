@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  userId      Int     @id @default(autoincrement()) @map("userId")
+  username    String   @map("username")
+  password    String  @map("password")
+  email       String  @unique @map("email")
+  profileImg  String?  @map("profileImg")
+  userType    String  @default("Common") @map("userType")
+
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt  @map("updatedAt")
+  deletedAt   DateTime? @map("deletedAt")  
+
+  diarylike DiaryLikes[]
+  diary     diaries[]
+  comment   comments[]
+  secondaryComment    secondaryComments[]
+  @@map("Users")
+}
+
+model diaries {
+  diaryId     Int         @id @default(autoincrement()) @map("diaryId")
+  UserId      Int         @map("UserId")
+  EmotionStatus   Int     @map("EmotionalStatus")
+  image       String?     @map("image")
+  content     String      @map("content")
+  isPublic    Boolean     @default(false) @map("isPublic")
+  viewCount   Int         @default(0) @map("viewCount")
+  likeCount   Int         @default(0) @map("likeCount")
+  likeExist   Boolean     @default(false) @map("likeExist")
+  sentence    String?     @map("sentence")
+  weather     String      @map("weather")
+  temperature String?        @map("temperature")
+  humid       String?        @map("humid")
+  sleep       String?        @map("sleep")
+
+  createdAt   DateTime    @default(now()) @map("createdAt")
+  updatedAt   DateTime    @updatedAt  @map("updatedAt")
+  deletedAt   DateTime?   @map("deletedAt")
+  
+  diarylike DiaryLikes[]
+  comment     comments[]
+  
+  User        Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  secondaryComment    secondaryComments[]
+  @@map("diaries")
+}
+
+model comments {
+  commentId      Int   @id   @default(autoincrement()) @map("commentId")
+  DiaryId        Int   @map("DiaryId")
+  UserId         Int   @map("UserId")
+  content        String  @map("content")
+  isEdited      Boolean @default(false) @map("isEdited")
+  
+  createdAt      DateTime   @default(now()) @map("createdAt")
+  updatedAt      DateTime   @updatedAt      @map("updatedAt")
+  deletedAt      DateTime?  @map("deletedAt")
+  
+  User         Users        @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  diary        diaries      @relation(fields: [DiaryId], references: [diaryId], onDelete: Cascade)
+  secondaryComment    secondaryComments[]
+  @@map("comments") 
+}
+
+model DiaryLikes {
+  diarylikeId Int @id @default(autoincrement()) @map("diarylikeId")
+  UserId Int @map("UserId")
+  DiaryId Int @map("DiaryId")
+  
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  Diary diaries @relation(fields: [DiaryId], references: [diaryId], onDelete: Cascade)
+
+  @@map("DiaryLikes")
+}
+
+
+model secondaryComments {
+  secondaryCommentId    Int        @id   @default(autoincrement()) @map("secondaryCommentId")
+  DiaryId               Int        @map("DiaryId")
+  UserId                Int        @map("UserId")
+  CommentId             Int        @map("CommentId")
+  content               String     @map("content")
+
+  createdAt    DateTime   @default(now()) @map("createdAt")
+  updatedAt    DateTime   @updatedAt   @map("updatedAt")
+  deletedAt    DateTime?  @map("deletedAt")
+
+  User         Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  diary        diaries    @relation(fields: [DiaryId], references: [diaryId], onDelete: Cascade)
+  comment      comments   @relation(fields: [CommentId], references: [commentId], onDelete: Cascade)
+
+  @@map("secondaryComments")
+}
+

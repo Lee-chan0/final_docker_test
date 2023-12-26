@@ -1,0 +1,1154 @@
+openapi : 3.0.0
+info:
+  title: "NINE Cloud"
+  description: "일반 로그인, OAuth로그인, 토큰 재발급 API에선 모두 A/T와 R/T를 응답 헤더에 담아서 전송합니다."
+  version: "1.0.0"
+paths:
+  /signup:
+    post:
+      summary: "회원가입시 회원정보 받기 및 인증코드 받기"
+      tags:
+        - Login
+      responses:
+        "201":
+          description: "이메일 전송"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "이메일 전송 완료"
+        "400":
+          description: "이메일 중복"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "이미 가입된 이메일 입니다."
+        "500":
+          description: "이메일 전송 실패"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "메일 전송 도중 Error가 발생했습니다."
+
+  /signoff:
+    delete:
+      summary: 내 계정 삭제
+      tags:
+        - User
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        "201":
+          description: 탈퇴 처리 OK
+          content:
+            application/json:
+              example:
+                message: "탈퇴처리 되었습니다."
+
+  /myInfo/editmyInfo:
+    patch:
+      summary: 내 정보 수정 기능
+      tags:
+        - User
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: 변경할 사용자 이름
+                profileImg:
+                  type: string
+                  description: 변경할 프로필 이미지 URL
+                password:
+                  type: string
+                  description: 현재 비밀번호
+                newPassword:
+                  type: string
+                  description: 새로운 비밀번호
+      responses:
+        "201":
+          description: 수정 완료
+          content:
+            application/json:
+              example:
+                message: "수정이 완료되었습니다."
+        "400":
+          description: 소셜 로그인 사용자
+          content:
+            application/json:
+              example:
+                message: "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다. or 비밀번호가 틀립니다."
+
+
+  /token:
+    get:
+      summary: accesstoken만료시 refreshtoken을 이용한 재발급
+      tags:
+        - Token
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+                    type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        '201':
+          description: 토큰 발급 완료
+          content:
+            application/json:
+              example:
+                message: "AccessToken 발급 완료"
+        '401':
+          description: 토큰 발급 실패 (RefreshToken 불일치)
+          content:
+              application/json:
+                example:
+                  message: "비정상적인 접근입니다. 자동으로 로그아웃 됩니다."
+
+  /myInfo:
+    get:
+      summary: 내 정보 조회
+      tags:
+        - User
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        '200':
+          description: 해당 유저 정보 조회
+          content:
+            application/json:
+              example:
+                msg: '{"data":{"userId":1,"username":"홍길동","email":"example@naver.com","profileImg":"image.jpg"}}'
+        '400':
+          description: 해당 유저가 없을때
+          content:
+            application/json:
+              example:
+                msg: "존재하지 않는 유저입니다."
+
+  /logout:
+    post:
+      summary: 로그아웃
+      tags:
+        - Login
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        '200':
+          description: 로그아웃 성공시
+          headers:
+            Authorization:
+              description: 토큰 비우기
+              schema:
+                type: string
+                example: ""
+            Refreshtoken:
+              description: 토큰 비우기
+              schema:
+                type: string
+                example: ""
+        content:
+          application/json:
+            example:
+              msg: "로그아웃 되었습니다."
+
+
+  /signin:
+    post:
+      summary: 로그인
+      tags:
+        - Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 유저의 email
+                  example: user@example.com
+                password:
+                  type: string
+                  description: 유저의 password
+                  example: password1234
+      responses:
+        '200':
+          description: 로그인 성공시
+          headers:
+            Authorization:
+              description: Bearer accesstoken
+              schema:
+                type: string 
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            Refreshtoken:
+              description: Refreshtoken
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              example:
+                msg: "username님, 환영합니다."
+                profileImage: "userprofileIMG.jpg"
+        '400':
+          description: 패스워드 불일치
+          content:
+            application/json:
+              example:
+                msg: "존재하지 않는 email입니다. or 비밀번호가 일치하지 않습니다."
+
+
+  /complete-signup:
+    post:
+      summary: 이메일 인증 후, 회원가입 완료
+      tags:
+        - Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                type: string
+                  description: 유저의 이메일
+                  example: user@example.com
+                Authenticationcode:
+                  type: string
+                  description: 이메일로 전송된 인증 코드
+                  example: abcd1234
+                password:
+                  type: string
+                  description: 유저의 비밀번호
+                  example: password1234
+                username:
+                  type: string
+                  description: 유저의 닉네임
+                  example: myusername
+      responses:
+        '201':
+          description: 회원가입 성공시
+          content:
+            application/json:
+              example:
+                message: "myusername님, 회원가입이 완료되었습니다."
+              data:
+                  userId: 1
+                  username: "myusername"
+                  userType: "Common or K or N or G"
+                  email: "user@example.com"
+        '400':
+          description: 인증 코드 오류시
+          content:
+            application/json:
+              example:
+                message: "인증 코드가 올바르지 않습니다."
+        '500':
+          description: 서버 오류시
+          content:
+            application/json:
+              example:
+                message: "Server Error"
+
+  /diaries/detail/secondaryComment/{diaryId}:
+    get:
+      tags:
+        - SecondaryComments
+      summary: 대댓글 조회
+      parameters:
+        - in: path
+          name: diaryId
+          description: 조회하고자 하는 대댓글이 포함된 diary의 id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        200:
+          description: 댓글 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+        400: 
+          description: 일기혹은 댓글조회 실패 및 서버에러
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string 
+  /diaries/detail/secondaryComment/{diaryId}/{commentId}:
+    post:
+      tags:
+        - SecondaryComments
+      summary: 대댓글 등록
+      parameters:
+        - in: path
+          name: diaryId
+          description: 댓글을 등록하고자 하는 diary의 Id값
+          required: true
+          type: string
+        - in: path
+          name: commentId
+          description: 댓글을 등록하고자 하는 comment의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        200:
+          description: 댓글 등록 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                      type: string
+                      description: 성공메세지
+        400: 
+          description: 일기조회/댓글등록 실패 및 서버 에러
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  
+    patch:
+      tags:
+        - SecondaryComments
+      summary: 대댓글 수정
+      parameters:
+        - in: path
+          name: diaryId
+          description: 수정하고자 하는 대댓글이 소속된 diary의 Id값
+          required: true
+          type: string
+        - in: path
+          name: commentId
+          description: 수정하고자 하는 대댓글이 소속된 comment의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+        - in: body
+          name: content
+          description: 수정할 대댓글 내용
+          required: true
+          type: string
+      responses:
+        200:
+          description: 대댓글 수정 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                      type: string
+                      description: 성공메세지
+        400: 
+          description: 일기조회/댓글등록 실패 및 서버 에러
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string 
+  /diary/detail/comment/{secondaryCommentId}:
+    delete:
+      tags:
+        - SecondaryComments
+      summary: 댓글 삭제
+      parameters:
+        - in: path
+          name: diaryId
+          description: 삭제하고자 하는 comment의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        200:
+          description: 댓글 삭제 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                      type: string
+                      description: 성공메세지
+        400: 
+          description: 일기조회/댓글등록 실패 및 서버 에러
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string 
+
+
+  /diary/calendar/{year}/{month}:
+    get:
+      tags:
+        - main-calendar
+      summary: 메인화면 캘린더 데이터 조회
+      parameters:
+        - in: path
+          name: year
+          description: 조회하고자 하는 캘린더의 year데이터
+          required: true
+          type: string
+        - in: header
+        - in: path
+          name: month
+          description: 조회하고자 하는 캘린더의month 데이터
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 댓글 조회 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                  data:
+                    type: array
+          400: 
+            description: 일기혹은 댓글조회 실패 및 서버에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string 
+
+
+  /feeds:
+    get:
+      tags:
+        - Feeds
+      summary: isPublic이 true인 피드 조회
+      parameters:
+        - in: query
+          name: page
+          description: 표시하고자 하는 페이지 번호
+          required: false
+          type: integer
+      responses:
+          200:
+            description: 피드 조회 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          400: 
+            description: 피드 조회 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+
+  /feeds/mydiaries:
+    get:
+      tags:
+        - Feeds
+      summary: userId 기반 내 피드 조회
+      parameters:
+        - in: query
+          name: page
+          description: 표시하고자 하는 페이지 번호
+          required: false
+          type: integer
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 피드 조회 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          400: 
+            description: 피드 조회 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                
+
+  /feeds/:diaryId/like:
+    post:
+      tags:
+        - Likes
+      summary: 좋아요 및 좋아요 취소 기능
+      parameters:
+        - in: path
+          name: diaryId
+          schema:
+            type: Integer
+          required: true
+          description: diaryId를 넣어주세요
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+        '201':
+          description: 좋아요 추가 및 삭제
+          content:
+            application/json:
+              examples:
+                added:
+                  summary: 좋아요 추가
+                  value:
+                    message: "좋아요가 추가되었습니다."
+                    data: 1
+                removed:
+                  summary: 좋아요 취소
+                  value:
+                    message: "좋아요가 취소되었습니다."
+                    data: 0
+        '400':
+          description: diaryId가 잘못됐을때
+          content:
+            application/json:
+              example:
+                message: "해당하는 일기가 없습니다."  
+
+
+
+  /diaries/detail/{diaryId}:
+    get:
+      tags:
+        - diaries
+      summary: 일기 조회
+      parameters:
+        - in: path
+          name: diaryId
+          description: 표시하고자 하는 다이어리의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 일기 조회 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          400: 
+            description: 일기 조회 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+  
+  
+  /diaries/posting:
+    post:
+      tags:
+        - diaries
+      summary: 일기 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                EmotionStatus:
+                  type: integer
+                  description: 감정상태값
+                content:
+                  type: string
+                  description: 일기 내용
+                isPublic:
+                  type: boolean
+                  description: 공개 설정
+                weather:
+                  type: string
+                  description: 날씨 값
+                sentence:
+                  type: string
+                  description: 포춘쿠키 한마디
+      responses:
+          200:
+            description: 일기 등록 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          400: 
+            description: 일기 등록 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+  
+      security:
+          - BearerAuth: []
+  
+  /diaries/edit/{diaryId}:
+    patch:
+      tags:
+        - diaries
+      summary: 일기 수정
+      parameters:
+        - in: body
+          name: content, isPublic
+          description: 수정할 내용
+          required: true
+          type: string
+        - in: path
+          name: diaryId
+          description: 수정하고자 하는 다이어리의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          201:
+            description: 일기 수정 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          300:
+            description: 입력한 diaryId값에 할당된 일기 데이터가 존재하지 않음
+            constent:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                    type: string
+          400: 
+            description: 일기 수정 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+  
+  /diaries/delete/{diaryId}:
+    delete:
+      tags:
+        - diaries
+      summary: 일기 삭제
+      parameters:
+        - in: path
+          name: diaryId
+          description: 삭제하고자 하는 다이어리의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          201:
+            description: 일기 삭제 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: array
+          401:
+            description: 입력한 diaryId값에 할당된 일기 데이터가 존재하지 않음
+            constent:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                    type: string
+          400: 
+            description: 일기 삭제 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+
+
+
+  /diaries/detail/comment/{diaryId}:
+    get:
+      tags:
+        - comments
+      summary: 댓글 조회
+      parameters:
+        - in: path
+          name: diaryId
+          description: 조회하고자 하는 댓글이 포함된 diary의 id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 댓글 조회 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                  data:
+                    type: array
+          400: 
+            description: 일기혹은 댓글조회 실패 및 서버에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string 
+    post:
+      tags:
+        - comments
+      summary: 댓글 등록
+      parameters:
+        - in: path
+          name: diaryId
+          description: 댓글을 등록하고자 하는 diary의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 댓글 등록 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                        type: string
+                        description: 성공메세지
+          400: 
+            description: 일기조회/댓글등록 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+  
+  
+  
+  /diary/detail/comment/{commentId}:
+    patch:
+      tags:
+        - comments
+      summary: 댓글 수정
+      parameters:
+        - in: path
+          name: commentId
+          description: 수정하고자 하는 comment의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+        - in: body
+          name: content
+          description: 수정할 일기 내용
+          required: true
+          type: string
+      responses:
+          200:
+            description: 댓글 등록 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                        type: string
+                        description: 성공메세지
+          400: 
+            description: 일기조회/댓글등록 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string 
+      delete:
+      tags:
+        - comments
+      summary: 댓글 삭제
+      parameters:
+        - in: path
+          name: commentId
+          description: 삭제하고자 하는 comment의 Id값
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: Bearer 토큰
+        - in: header
+          name: Refreshtoken
+          schema:
+            type: string
+          required: true
+          description: Refresh 토큰
+      responses:
+          200:
+            description: 댓글 삭제 성공
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                        type: string
+                        description: 성공메세지
+          400: 
+            description: 일기조회/댓글등록 실패 및 서버 에러
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string 
+
+
+  /cancel-signoff:
+    post:
+      summary: 탈퇴 요청 취소
+      description: 사용자가 요청한 탈퇴를 취소
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 탈퇴 요청을 취소할 사용자의 이메일
+                  example: user@example.com
+      tags:
+        - Login
+      responses:
+        '201':
+          description: 탈퇴 요청이 성공적으로 취소되었습니다.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  msg:
+                    type: string
+              examples:
+                success:
+                  value:
+                    message: 탈퇴 요청이 취소되었습니다.
+                    msg: 탈퇴까지 2일, 5시간 남았습니다.
+        '400':
+          description: 잘못된 요청 또는 요청된 리소스가 존재하지 않음
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                error:
+                  value:
+                    message: Bad Request
+        '500':
+          description: 서버 오류
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                error:
+                  value:
+                    message: Server Error
+
+
+  
+  /myInfo/edit-pw:
+    patch:
+      summary: 비밀번호 변경 API
+      tags: User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: 현재 비밀번호
+                newPassword:
+                  type: string
+                  description: 새로운 비밀번호
+      responses:
+        200:
+          description: 비밀번호 변경 성공
+        400:
+          description: 잘못된 요청 또는 소셜 로그인 사용자의 경우
+        401:
+          description: 인증 실패 (토큰이 유효하지 않음)
+        500:
+          description: 서버 오류
