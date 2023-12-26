@@ -16,6 +16,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import http from 'http'
 import initializeSocketIO from '../src/utils/io.js'
+import os from 'os';
 
 const app = express();
 const PORT = 3000;
@@ -56,7 +57,7 @@ app.use('/', [
 ]);
 
 app.get("/", (req, res) => {
-  res.send("last TEST22222222222");
+  res.send("plz test success");
 });
 
 // 헬스 체크 엔드포인트 추가
